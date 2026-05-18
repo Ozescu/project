@@ -50,6 +50,13 @@ def create_loan_from_copy(exemplaire, lecteur, bibliothecaire=None, start_date=N
 		exemplaire = Exemplaire.objects.select_for_update().get(pk=exemplaire.pk)
 		if exemplaire.status != Exemplaire.STATUS_DISP:
 			raise ValueError('Exemplaire non disponible.')
+		if Emprunt.objects.filter(
+			exemplaire__ouvrage=exemplaire.ouvrage,
+			lecteur=lecteur,
+			statut=Emprunt.STAT_EN_COURS,
+			date_retour_effective__isnull=True,
+		).exists():
+			raise ValueError('Ce lecteur a deja un emprunt actif pour cet ouvrage.')
 		loan = Emprunt.objects.create(
 			exemplaire=exemplaire,
 			lecteur=lecteur,

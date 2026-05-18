@@ -2,26 +2,22 @@
 {% block content %}
 <div class="section">
   <div class="form-card">
-    <h2>Créer un emprunt</h2>
-    <p class="form-subtitle">Attribuez un exemplaire disponible à un lecteur actif.</p>
+    <h2>Modifier mon profil</h2>
+    <p class="form-subtitle">Mettez a jour vos informations personnelles.</p>
     <form method="post" novalidate>
       {% csrf_token %}
-      {% if form.non_field_errors %}
-        <div class="field-error">{{ form.non_field_errors }}</div>
-      {% endif %}
       <div class="form-grid">
         {% for field in form %}
           <div class="field-block">
             {{ field.label_tag }}
             {{ field }}
-            {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
             {% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
           </div>
         {% endfor %}
       </div>
       <div class="form-actions sticky">
-        <button class="button" type="submit">Enregistrer l'emprunt</button>
-        <a class="button secondary" href="{% url 'loans:list' %}">Annuler</a>
+        <button class="button" type="submit">Enregistrer</button>
+        <a class="button secondary" href="{% url 'accounts:profile' %}">Annuler</a>
       </div>
     </form>
   </div>

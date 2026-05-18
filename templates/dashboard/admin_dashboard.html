@@ -5,15 +5,26 @@
     <div>
       <span class="eyebrow">Supervision</span>
       <h1>Tableau de bord administrateur</h1>
-      <p>Vue rapide des prêts, réservations, retards et alertes critiques.</p>
+      <p>Vue rapide des prêts, réservations, retards, sanctions et comptes actifs.</p>
     </div>
     <div class="admin-ops-actions">
       <a class="button" href="{% url 'catalogue:ouvrage_add' %}">Ajouter ouvrage</a>
+      <a class="button secondary" href="{% url 'accounts:user_add' %}?role=bibliothecaire">Ajouter bibliothÃ©caire</a>
       <a class="button secondary" href="{% url 'accounts:user_add' %}">Ajouter utilisateur</a>
     </div>
   </header>
 
   <div class="ops-kpi-grid">
+    <a class="ops-kpi" href="{% url 'accounts:user_list' %}?role=lecteur&statut=actif">
+      <span>Lecteurs actifs</span>
+      <strong>{{ active_readers_count }}</strong>
+      <small>Comptes non suspendus</small>
+    </a>
+    <a class="ops-kpi" href="{% url 'accounts:user_list' %}?role=bibliothecaire&statut=actif">
+      <span>Bibliothécaires actifs</span>
+      <strong>{{ active_bibliothecaires_count }}</strong>
+      <small>Personnel actif</small>
+    </a>
     <a class="ops-kpi" href="{% url 'catalogue:list' %}">
       <span>Ouvrages</span>
       <strong>{{ ouvrages_count }}</strong>
@@ -32,12 +43,17 @@
     <a class="ops-kpi" href="{% url 'reservations:my_reservations' %}">
       <span>Réservations actives</span>
       <strong>{{ reservations }}</strong>
-      <small>Actives</small>
+      <small>En attente</small>
     </a>
     <a class="ops-kpi {% if late_loans_count %}is-danger{% endif %}" href="{% url 'loans:list' %}">
       <span>Emprunts en retard</span>
       <strong>{{ late_loans_count }}</strong>
       <small>{{ overdue_readers_count }} lecteur(s)</small>
+    </a>
+    <a class="ops-kpi {% if active_sanctions_count %}is-warning{% endif %}" href="{% url 'sanctions:mine' %}">
+      <span>Sanctions actives</span>
+      <strong>{{ active_sanctions_count }}</strong>
+      <small>{{ total_fines }} MAD</small>
     </a>
     <a class="ops-kpi {% if important_notifications_count %}is-warning{% endif %}" href="{% url 'notifications:mine' %}">
       <span>Notifications importantes</span>
@@ -86,6 +102,12 @@
               <strong>{{ late_loans_count }}</strong>
             </a>
           {% endif %}
+          {% if active_sanctions_count %}
+            <a class="ops-alert warning" href="{% url 'sanctions:mine' %}">
+              <span>Sanctions actives</span>
+              <strong>{{ active_sanctions_count }}</strong>
+            </a>
+          {% endif %}
           {% if pending_requests_count %}
             <a class="ops-alert warning" href="{% url 'loans:requests' %}">
               <span>Demandes emprunt</span>
@@ -98,9 +120,51 @@
               <strong>{{ returns_to_confirm_count }}</strong>
             </a>
           {% endif %}
-          {% if not late_loans_count and not pending_requests_count and not returns_to_confirm_count %}
+          {% if not late_loans_count and not active_sanctions_count and not pending_requests_count and not returns_to_confirm_count %}
             <p class="compact-empty success">Aucune alerte critique.</p>
           {% endif %}
+        </div>
+      </section>
+
+      <section class="card ops-panel">
+        <div class="ops-panel-head">
+          <div>
+            <span class="eyebrow">Retards</span>
+            <h2>Emprunts à traiter</h2>
+          </div>
+          <a class="button mini secondary" href="{% url 'loans:list' %}">Voir</a>
+        </div>
+        <div class="ops-activity-list">
+          {% for loan in late_loans %}
+            <div class="ops-activity-row">
+              <span class="ops-type">Retard</span>
+              <strong>{{ loan.exemplaire.ouvrage.titre }}</strong>
+              <small>{{ loan.lecteur.username }} · {{ loan.overdue_days }}j</small>
+            </div>
+          {% empty %}
+            <p class="compact-empty success">Aucun retard actif.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="card ops-panel">
+        <div class="ops-panel-head">
+          <div>
+            <span class="eyebrow">Sanctions</span>
+            <h2>Sanctions actives</h2>
+          </div>
+          <a class="button mini secondary" href="{% url 'sanctions:mine' %}">Gérer</a>
+        </div>
+        <div class="ops-activity-list">
+          {% for sanction in important_sanctions %}
+            <div class="ops-activity-row">
+              <span class="ops-type">{{ sanction.get_type_sanction_display }}</span>
+              <strong>{{ sanction.lecteur.username }}</strong>
+              <small>{{ sanction.montant }} MAD</small>
+            </div>
+          {% empty %}
+            <p class="compact-empty success">Aucune sanction active.</p>
+          {% endfor %}
         </div>
       </section>
     </aside>

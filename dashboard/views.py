@@ -69,6 +69,16 @@ def admin_dashboard(request):
     active_sanctions_count = important_sanctions_qs.count()
     total_fines = important_sanctions_qs.aggregate(total=Sum('montant'))['total'] or 0
     overdue_readers_count = late_loans.values('lecteur').distinct().count()
+    active_readers_count = User.objects.filter(
+        role=User.ROLE_LECTEUR,
+        statut_compte=User.STATUT_ACTIF,
+        is_suspended=False,
+    ).count()
+    active_bibliothecaires_count = User.objects.filter(
+        role=User.ROLE_BIBLIO,
+        statut_compte=User.STATUT_ACTIF,
+        is_suspended=False,
+    ).count()
 
     recent_loans = list(Emprunt.objects.select_related('exemplaire__ouvrage', 'lecteur').order_by('-date_emprunt')[:5])
     recent_reservations = list(Reservation.objects.select_related('ouvrage', 'lecteur').order_by('-date_reservation')[:5])
@@ -178,6 +188,8 @@ def admin_dashboard(request):
         'lecteurs_count': User.objects.filter(role=User.ROLE_LECTEUR).count(),
         'biblio_count': User.objects.filter(role=User.ROLE_BIBLIO).count(),
         'admins_count': User.objects.filter(role=User.ROLE_ADMIN).count(),
+        'active_readers_count': active_readers_count,
+        'active_bibliothecaires_count': active_bibliothecaires_count,
         'ouvrages_count': Ouvrage.objects.count(),
         'exemplaires_count': Exemplaire.objects.count(),
         'available_copies_count': Exemplaire.objects.filter(status=Exemplaire.STATUS_DISP).count(),

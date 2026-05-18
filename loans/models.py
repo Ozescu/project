@@ -81,7 +81,7 @@ class Emprunt(models.Model):
 
 	@property
 	def is_active(self):
-		return self.statut in [self.STAT_EN_COURS, self.STAT_RETARD] and not self.date_retour_effective
+		return self.statut == self.STAT_EN_COURS and not self.date_retour_effective
 
 	@property
 	def can_be_returned(self):

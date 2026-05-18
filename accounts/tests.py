@@ -24,6 +24,84 @@ class UserRoleTests(TestCase):
         self.assertEqual(admin.statut_compte, User.STATUT_ACTIF)
         self.assertFalse(admin.is_suspended)
 
+    def test_reader_can_edit_own_profile_without_changing_role(self):
+        User = get_user_model()
+        reader = User.objects.create_user('reader_profile', 'old@example.com', 'pw', role=User.ROLE_LECTEUR)
+        self.client.force_login(reader)
+
+        response = self.client.post(reverse('accounts:profile_edit'), {
+            'username': 'reader_updated',
+            'email': 'new@example.com',
+            'first_name': 'Ali',
+            'last_name': 'Amrani',
+            'telephone': '0600000000',
+            'adresse': 'Casablanca',
+            'role': User.ROLE_ADMIN,
+        })
+
+        reader.refresh_from_db()
+        self.assertRedirects(response, reverse('accounts:profile'))
+        self.assertEqual(reader.username, 'reader_updated')
+        self.assertEqual(reader.email, 'new@example.com')
+        self.assertEqual(reader.telephone, '0600000000')
+        self.assertEqual(reader.adresse, 'Casablanca')
+        self.assertEqual(reader.role, User.ROLE_LECTEUR)
+
+    def test_admin_can_add_edit_and_suspend_bibliothecaire(self):
+        User = get_user_model()
+        admin = User.objects.create_user('admin_staff', 'admin_staff@example.com', 'pw', role=User.ROLE_ADMIN)
+        self.client.force_login(admin)
+
+        response = self.client.post(reverse('accounts:user_add') + f'?role={User.ROLE_BIBLIO}', {
+            'username': 'new_biblio',
+            'email': 'biblio@example.com',
+            'first_name': 'Sara',
+            'last_name': 'Biblio',
+            'telephone': '0611111111',
+            'adresse': 'Rabat',
+            'role': User.ROLE_BIBLIO,
+            'statut_compte': User.STATUT_ACTIF,
+            'password': 'biblio-pass-123',
+        })
+
+        biblio = User.objects.get(username='new_biblio')
+        self.assertRedirects(response, reverse('accounts:user_list') + f'?role={User.ROLE_BIBLIO}')
+        self.assertEqual(biblio.role, User.ROLE_BIBLIO)
+        self.assertEqual(biblio.statut_compte, User.STATUT_ACTIF)
+        self.assertFalse(biblio.is_suspended)
+        self.assertTrue(biblio.check_password('biblio-pass-123'))
+
+        response = self.client.post(reverse('accounts:user_edit', args=[biblio.pk]), {
+            'username': 'new_biblio',
+            'email': 'updated_biblio@example.com',
+            'first_name': 'Sara',
+            'last_name': 'Updated',
+            'telephone': '0622222222',
+            'adresse': 'Casablanca',
+            'role': User.ROLE_BIBLIO,
+            'statut_compte': User.STATUT_ACTIF,
+            'password': '',
+        })
+        biblio.refresh_from_db()
+
+        self.assertRedirects(response, reverse('accounts:user_list') + f'?role={User.ROLE_BIBLIO}')
+        self.assertEqual(biblio.email, 'updated_biblio@example.com')
+        self.assertEqual(biblio.telephone, '0622222222')
+
+        response = self.client.post(reverse('accounts:user_toggle_status', args=[biblio.pk]))
+        biblio.refresh_from_db()
+
+        self.assertRedirects(response, reverse('accounts:user_list'))
+        self.assertEqual(biblio.statut_compte, User.STATUT_SUSPENDU)
+        self.assertTrue(biblio.is_suspended)
+
+        self.client.logout()
+        response = self.client.post(reverse('accounts:login'), {
+            'username': 'new_biblio',
+            'password': 'biblio-pass-123',
+        })
+        self.assertRedirects(response, reverse('accounts:login'))
+
 
 class AuthenticationCsrfTests(TestCase):
     def setUp(self):

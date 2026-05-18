@@ -15,6 +15,15 @@ class AdminDashboardTests(TestCase):
         User = get_user_model()
         self.admin = User.objects.create_user('admin_dash', 'admin@example.com', 'pw', role=User.ROLE_ADMIN)
         self.reader = User.objects.create_user('reader_dash', 'reader@example.com', 'pw')
+        self.biblio = User.objects.create_user('biblio_dash', 'biblio@example.com', 'pw', role=User.ROLE_BIBLIO)
+        User.objects.create_user(
+            'reader_suspended',
+            'suspended@example.com',
+            'pw',
+            role=User.ROLE_LECTEUR,
+            statut_compte=User.STATUT_SUSPENDU,
+            is_suspended=True,
+        )
         self.category = Categorie.objects.create(nom='Science')
         self.book = Ouvrage.objects.create(isbn='dash-1', titre='Livre dashboard', auteur='Auteur', categorie=self.category)
         self.copy = Exemplaire.objects.create(ouvrage=self.book, code='DASH-1')
@@ -47,12 +56,17 @@ class AdminDashboardTests(TestCase):
         self.assertContains(response, 'Alertes opérationnelles')
         self.assertContains(response, 'Ouvrages')
         self.assertContains(response, 'Exemplaires')
+        self.assertContains(response, 'Lecteurs actifs')
+        self.assertContains(response, 'Bibliothécaires actifs')
+        self.assertContains(response, 'Emprunts en retard')
+        self.assertContains(response, 'Sanctions actives')
+        self.assertContains(response, 'Emprunts à traiter')
+        self.assertContains(response, '2.00 MAD')
         self.assertContains(response, 'Notifications importantes')
         self.assertNotContains(response, 'Top favoris')
         self.assertNotContains(response, 'Livres populaires')
         self.assertNotContains(response, 'Top catégories')
         self.assertNotContains(response, 'Actions utiles')
-        self.assertNotContains(response, 'Sanctions actives')
 
     def test_admin_support_pages_render(self):
         self.client.force_login(self.admin)

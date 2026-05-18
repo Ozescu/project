@@ -6,6 +6,9 @@
     <p class="form-subtitle">Organisez les informations du compte avec une interface claire et des actions accessibles.</p>
     <form method="post" novalidate>
       {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="message error">{{ form.non_field_errors }}</div>
+      {% endif %}
       <div class="form-section">
         <h3>Identité</h3>
         <div class="form-grid">

@@ -4,9 +4,9 @@
   <div class="hero-card">
     <div class="section-header">
       <div>
-        <span class="eyebrow">Emprunts</span>
+        <span class="eyebrow">Loans</span>
         <h1>{% if user.is_bibliothecaire or user.is_administrateur %}Gestion des emprunts{% else %}Mes emprunts{% endif %}</h1>
-        <p>Historique complet, dates de retour prevues, statuts et retours actifs uniquement.</p>
+        <p>{% if can_manage_loans %}Historique complet, dates de retour prevues, statuts et actions de retour.{% else %}Active loans, real return dates and borrowing history from the database.{% endif %}</p>
       </div>
       <div class="actions-row compact">
         <a class="button secondary" href="{% url 'loans:requests' %}">{% if user.is_bibliothecaire or user.is_administrateur %}Demandes{% else %}Mes demandes{% endif %}</a>
@@ -31,22 +31,16 @@
               <td data-label="Lecteur">{{ e.lecteur.get_full_name|default:e.lecteur.username }}</td>
               <td data-label="Date emprunt">{{ e.date_emprunt|date:'d/m/Y' }}</td>
               <td data-label="Retour prevu">{{ e.date_retour_prevue|date:'d/m/Y'|default:'-' }}</td>
-              <td data-label="Statut">
-                {% if e.date_retour_effective %}
-                  <span class="status-pill retourne">Retourne</span>
-                {% else %}
-                  <span class="status-pill en_cours">En cours</span>
-                {% endif %}
-              </td>
+              <td data-label="Statut"><span class="status-pill {{ e.statut }}">{{ e.get_statut_display }}</span></td>
               <td data-label="Retour reel">{{ e.date_retour_effective|date:'d/m/Y'|default:'-' }}</td>
               <td data-label="Action">
                 {% if e.can_be_returned %}
                   <form method="post" action="{% url 'loans:return' e.pk %}" style="display:inline;">
                     {% csrf_token %}
-                    <button class="button mini" type="submit" title="Confirmer le retour de ce livre">Retourner</button>
+                    <button class="button mini" type="submit" title="Return this loan">Return book</button>
                   </form>
-                {% elif e.date_retour_effective %}
-                  <span class="muted">Retour le {{ e.date_retour_effective|date:'d/m/Y' }}</span>
+                {% elif e.statut == 'retourne' %}
+                  <span class="muted">Already returned</span>
                 {% else %}
                   <span class="muted">-</span>
                 {% endif %}
@@ -60,82 +54,78 @@
     </div>
   {% else %}
     <div class="card table-card">
-      <h2>Mes emprunts actifs</h2>
+      <h2>Active loans</h2>
       <table class="table responsive-table">
         <thead>
-          <tr><th>Ouvrage</th><th>Date emprunt</th><th>Retour prevu</th><th>Jours restants</th><th>Statut</th><th>Action</th></tr>
+          <tr><th>Book title</th><th>Borrow date</th><th>Expected return date</th><th>Remaining days</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody>
           {% for e in active_emprunts %}
             <tr>
-              <td data-label="Ouvrage"><a class="table-link" href="{{ e.exemplaire.ouvrage.get_absolute_url }}">{{ e.exemplaire.ouvrage.titre }}</a></td>
-              <td data-label="Date emprunt">{{ e.date_emprunt|date:'d/m/Y' }}</td>
-              <td data-label="Retour prevu">{{ e.date_retour_prevue|date:'d/m/Y'|default:'-' }}</td>
-              <td data-label="Jours restants">
-                {% if e.statut in open_statuses and e.date_retour_prevue %}
+              <td data-label="Book title"><a class="table-link" href="{{ e.exemplaire.ouvrage.get_absolute_url }}">{{ e.exemplaire.ouvrage.titre }}</a></td>
+              <td data-label="Borrow date">{{ e.date_emprunt|date:'d/m/Y' }}</td>
+              <td data-label="Expected return date">{{ e.date_retour_prevue|date:'d/m/Y'|default:'-' }}</td>
+              <td data-label="Remaining days">
+                {% if e.date_retour_prevue %}
                   {% if e.is_overdue %}
-                    <span class="status-pill overdue">-{{ e.overdue_days }}j</span>
+                    <span class="status-pill overdue">-{{ e.overdue_days }}d</span>
                   {% elif e.days_remaining <= 3 %}
-                    <span class="status-pill due">{{ e.days_remaining }}j</span>
+                    <span class="status-pill due">{{ e.days_remaining }}d</span>
                   {% else %}
-                    <span class="status-pill available">{{ e.days_remaining }}j</span>
+                    <span class="status-pill available">{{ e.days_remaining }}d</span>
                   {% endif %}
                 {% else %}
                   -
                 {% endif %}
               </td>
-              <td data-label="Statut"><span class="status-pill en_cours">En cours</span></td>
+              <td data-label="Status">
+                <span class="status-pill {{ e.statut }}">
+                  {% if e.statut == 'en_retard' %}Overdue{% else %}In progress{% endif %}
+                </span>
+              </td>
               <td data-label="Action">
-                {% if user.is_lecteur and e.lecteur == user and e.can_be_returned %}
+                {% if e.can_be_returned %}
                   <form method="post" action="{% url 'loans:return' e.pk %}">
                     {% csrf_token %}
-                    <button class="button secondary" type="submit">Retourner</button>
+                    <button class="button secondary" type="submit">Return book</button>
                   </form>
-                {% elif e.date_retour_effective %}
-                  <span class="muted">Retour le {{ e.date_retour_effective|date:'d/m/Y' }}</span>
                 {% else %}
                   <span class="muted">-</span>
                 {% endif %}
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="6" class="muted">Aucun emprunt actif.</td></tr>
+            <tr><td colspan="6" class="muted">No active loans</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-  {% endif %}
 
-  {% if returned_emprunts %}
-    <div class="card table-card">
-      <h2>Historique des emprunts</h2>
-      <table class="table responsive-table">
-        <thead>
-          <tr><th>Ouvrage</th><th>Date emprunt</th><th>Retour reel</th><th>Statut</th><th>Action</th></tr>
-        </thead>
-        <tbody>
-          {% for e in returned_emprunts %}
-            <tr>
-              <td data-label="Ouvrage"><a class="table-link" href="{{ e.exemplaire.ouvrage.get_absolute_url }}">{{ e.exemplaire.ouvrage.titre }}</a></td>
-              <td data-label="Date emprunt">{{ e.date_emprunt|date:'d/m/Y' }}</td>
-              <td data-label="Retour reel">{{ e.date_retour_effective|date:'d/m/Y'|default:'-' }}</td>
-              <td data-label="Statut"><span class="status-pill retourne">Retourne</span></td>
-              <td data-label="Action">
-                {% if e.date_retour_effective %}
-                  <span class="muted">Retour le {{ e.date_retour_effective|date:'d/m/Y' }}</span>
-                {% else %}
-                  <span class="muted">Retour enregistre</span>
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    {% if returned_emprunts %}
+      <div class="card table-card">
+        <h2>Borrowing history</h2>
+        <table class="table responsive-table">
+          <thead>
+            <tr><th>Book title</th><th>Borrow date</th><th>Real return date</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for e in returned_emprunts %}
+              <tr>
+                <td data-label="Book title"><a class="table-link" href="{{ e.exemplaire.ouvrage.get_absolute_url }}">{{ e.exemplaire.ouvrage.titre }}</a></td>
+                <td data-label="Borrow date">{{ e.date_emprunt|date:'d/m/Y' }}</td>
+                <td data-label="Real return date">{{ e.date_retour_effective|date:'d/m/Y' }}</td>
+                <td data-label="Status"><span class="status-pill retourne">Returned</span></td>
+                <td data-label="Action"><span class="muted">Already returned</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
   {% endif %}
 
   {% if not active_emprunts and not returned_emprunts and not emprunts %}
-    <div class="empty-state"><h3>Aucun emprunt</h3><p>Il n'y a pas d'emprunt a afficher pour le moment.</p></div>
+    <div class="empty-state"><h3>No loans</h3><p>There are no loans to display yet.</p></div>
   {% endif %}
 </div>
 {% endblock %}

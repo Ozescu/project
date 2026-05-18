@@ -27,8 +27,6 @@
     <div class="card metric-card"><h3>Retours aujourd’hui</h3><p class="stat">{{ due_today_count }}</p><p class="stat-label">Action immédiate</p></div>
   </div>
 
-  {% load filters %}
-
   <div class="analytics-grid">
     {% if due_today_loans %}
     <div class="card">
@@ -44,8 +42,10 @@
               {% if loan.can_be_returned %}
                 <form method="post" action="{% url 'loans:return' loan.pk %}" style="display:inline;">
                   {% csrf_token %}
-                  <button class="button mini" type="submit" title="Confirmer le retour de ce livre">Retourner</button>
+                  <button class="button mini" type="submit" title="Confirmer le retour de ce livre">Retour</button>
                 </form>
+              {% elif loan.statut == 'retourne' %}
+                <span class="muted">Déjà retourné</span>
               {% else %}
                 <span class="muted">-</span>
               {% endif %}
@@ -86,7 +86,7 @@
                   {% csrf_token %}
                   <button class="button mini" type="submit">Accepter</button>
                 </form>
-                <form method="post" action="{% url 'reservations:cancel' reservation.pk %}">
+                <form method="post" action="{% url 'reservations:reject' reservation.pk %}">
                   {% csrf_token %}
                   <button class="button mini secondary" type="submit">Refuser</button>
                 </form>
@@ -127,8 +127,10 @@
               {% if item.loan.can_be_returned %}
                 <form method="post" action="{% url 'loans:return' item.loan.pk %}" style="display:inline;">
                   {% csrf_token %}
-                  <button class="button mini" type="submit" title="Confirmer le retour de ce livre">Retourner</button>
+                  <button class="button mini" type="submit" title="Confirmer le retour de ce livre">Retour</button>
                 </form>
+              {% elif item.loan.statut == 'retourne' %}
+                <span class="muted">Déjà retourné</span>
               {% endif %}
             </div>
           </div>

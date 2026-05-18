@@ -10,6 +10,7 @@ from notifications.models import Notification
 from reservations.models import Reservation
 
 from . import services
+from .forms import LoanCreateForm
 from .models import Emprunt, LoanRequest
 
 
@@ -19,29 +20,30 @@ def create_loan(request):
 		messages.error(request, 'Acces refuse')
 		return redirect('catalogue:list')
 	if request.method == 'POST':
-		lecteur = get_object_or_404(request.user.__class__, pk=request.POST.get('lecteur'))
-		exemplaire = get_object_or_404(Exemplaire, pk=request.POST.get('exemplaire'))
-		try:
-			services.create_loan_from_copy(
-				exemplaire,
-				lecteur,
-				request.user,
-				request.POST.get('date_debut'),
-				request.POST.get('date_retour'),
-			)
-		except ValueError as exc:
-			messages.error(request, str(exc))
-			return redirect('loans:create')
-		messages.success(request, 'Emprunt enregistre')
-		return redirect('loans:list')
-	exemplaires = Exemplaire.objects.filter(status=Exemplaire.STATUS_DISP).select_related('ouvrage')
-	return render(request, 'loans/form.html', {'exemplaires': exemplaires})
+		form = LoanCreateForm(request.POST)
+		if form.is_valid():
+			try:
+				services.create_loan_from_copy(
+					form.cleaned_data['exemplaire'],
+					form.cleaned_data['lecteur'],
+					request.user,
+					form.cleaned_data.get('date_debut'),
+					form.cleaned_data.get('date_retour'),
+				)
+			except ValueError as exc:
+				messages.error(request, str(exc))
+			else:
+				messages.success(request, 'Emprunt enregistre')
+				return redirect('loans:list')
+	else:
+		form = LoanCreateForm()
+	return render(request, 'loans/form.html', {'form': form})
 
 
 @login_required
 def list_loans(request):
 	services.refresh_overdue_loans()
-	active_statuses = [Emprunt.STAT_EN_COURS, Emprunt.STAT_RETARD]
+	active_statuses = [Emprunt.STAT_EN_COURS]
 	if services.is_library_staff(request.user):
 		qs = Emprunt.objects.select_related('exemplaire__ouvrage', 'lecteur').all().order_by('-date_emprunt')
 		return render(request, 'loans/list.html', {
@@ -52,8 +54,8 @@ def list_loans(request):
 		})
 
 	user_loans = Emprunt.objects.select_related('exemplaire__ouvrage').filter(lecteur=request.user).order_by('-date_emprunt')
-	active_emprunts = user_loans.filter(statut__in=active_statuses, date_retour_effective__isnull=True)
-	returned_emprunts = user_loans.exclude(statut__in=active_statuses, date_retour_effective__isnull=True)
+	active_emprunts = user_loans.filter(statut=Emprunt.STAT_EN_COURS, date_retour_effective__isnull=True)
+	returned_emprunts = user_loans.filter(statut=Emprunt.STAT_RET, date_retour_effective__isnull=False)
 	return render(request, 'loans/list.html', {
 		'active_emprunts': active_emprunts,
 		'returned_emprunts': returned_emprunts,
@@ -77,6 +79,9 @@ def request_loan(request, ouvrage_id):
 	ouvrage = get_object_or_404(Ouvrage, pk=ouvrage_id)
 	if not request.user.is_lecteur():
 		messages.error(request, 'Seuls les lecteurs peuvent faire une demande d emprunt.')
+		return redirect('catalogue:detail', pk=ouvrage_id)
+	if request.user.statut_compte != request.user.STATUT_ACTIF or request.user.is_suspended:
+		messages.error(request, 'Votre compte est suspendu ou bloque.')
 		return redirect('catalogue:detail', pk=ouvrage_id)
 	if request.method == 'POST':
 		try:
@@ -193,7 +198,7 @@ def process_return(request, pk):
 		messages.info(request, str(exc))
 		return redirect('loans:list')
 	if fine > 0:
-		messages.success(request, f'Retour enregistre. Amende: {fine} MAD')
+		messages.success(request, f'Retour effectué avec succès. Amende: {fine} MAD')
 	else:
-		messages.success(request, 'Retour enregistre avec succes.')
+		messages.success(request, 'Retour effectué avec succès')
 	return redirect('loans:list')

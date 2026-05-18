@@ -24,12 +24,12 @@
             {% csrf_token %}
             <button class="button secondary" type="submit">{% if is_fav %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}</button>
           </form>
-          {% if not has_active_reservation %}
+          {% if not has_active_reservation and not has_active_request and not has_active_loan %}
             <form method="post" action="{% url 'reservations:reserve' ouvrage.pk %}">
               {% csrf_token %}
               <button class="button" type="submit">Réserver</button>
             </form>
-          {% else %}
+          {% elif has_active_reservation %}
             <span class="status-pill reserved">Réservation active</span>
           {% endif %}
           {% if not has_active_request and not has_active_loan and not has_active_reservation %}

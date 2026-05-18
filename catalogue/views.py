@@ -31,15 +31,24 @@ def list_view(request):
     status = request.GET.get('status')
     if status:
         qs = qs.filter(exemplaires__status=status)
+    qs = qs.distinct()
     paginator = Paginator(qs, 10)
     page = request.GET.get('page')
     ouvrages = paginator.get_page(page)
     categories = Categorie.objects.all()
     fav_ids = []
     reservation_ids = []
+    request_ids = []
+    loan_ids = []
     if request.user.is_authenticated:
         fav_ids = list(Favorite.objects.filter(lecteur=request.user).values_list('ouvrage_id', flat=True))
         reservation_ids = list(Reservation.objects.filter(lecteur=request.user, statut=Reservation.STATUS_ACTIVE).values_list('ouvrage_id', flat=True))
+        request_ids = list(LoanRequest.objects.filter(lecteur=request.user, statut=LoanRequest.STATUS_PENDING).values_list('ouvrage_id', flat=True))
+        loan_ids = list(Emprunt.objects.filter(
+            lecteur=request.user,
+            statut=Emprunt.STAT_EN_COURS,
+            date_retour_effective__isnull=True,
+        ).values_list('exemplaire__ouvrage_id', flat=True))
     return render(request, 'catalogue/list.html', {
         'ouvrages': ouvrages,
         'page_obj': ouvrages,
@@ -49,6 +58,8 @@ def list_view(request):
         'can_manage': has_catalogue_permission(request.user),
         'fav_ids': fav_ids,
         'reservation_ids': reservation_ids,
+        'request_ids': request_ids,
+        'loan_ids': loan_ids,
     })
 
 
@@ -74,7 +85,7 @@ def detail_view(request, pk):
     has_active_loan = request.user.is_authenticated and Emprunt.objects.filter(
         lecteur=request.user,
         exemplaire__ouvrage=ouvrage,
-        statut__in=[Emprunt.STAT_EN_COURS, Emprunt.STAT_RETARD],
+        statut=Emprunt.STAT_EN_COURS,
         date_retour_effective__isnull=True,
     ).exists()
     similar_books = Ouvrage.objects.filter(
@@ -108,6 +119,9 @@ def favorite_toggle(request, pk):
     user = request.user
     if not user.is_lecteur():
         messages.error(request, 'Action réservée aux lecteurs.')
+        return redirect('catalogue:detail', pk=pk)
+    if user.statut_compte != user.STATUT_ACTIF or user.is_suspended:
+        messages.error(request, 'Votre compte est suspendu ou bloque.')
         return redirect('catalogue:detail', pk=pk)
     if request.method != 'POST':
         return redirect('catalogue:detail', pk=pk)

@@ -5,10 +5,11 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
-from .forms import RegisterForm, UserForm
+from .forms import ProfileForm, RegisterForm, UserForm
 from catalogue.models import Favorite
 from loans.models import Emprunt
 from reservations.models import Reservation
@@ -84,7 +85,7 @@ def profile(request):
         context = {
             'active_loans_count': Emprunt.objects.filter(
                 lecteur=request.user,
-                statut__in=[Emprunt.STAT_EN_COURS, Emprunt.STAT_RETARD],
+                statut=Emprunt.STAT_EN_COURS,
                 date_retour_effective__isnull=True,
             ).count(),
             'reservations_count': Reservation.objects.filter(lecteur=request.user).count(),
@@ -92,6 +93,19 @@ def profile(request):
             'active_sanctions_count': Sanction.objects.filter(lecteur=request.user, statut='active').count(),
         }
     return render(request, 'accounts/profile.html', context)
+
+
+@login_required
+def profile_edit(request):
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profil modifie avec succes.')
+            return redirect('accounts:profile')
+    else:
+        form = ProfileForm(instance=request.user)
+    return render(request, 'accounts/profile_form.html', {'form': form})
 
 
 @login_required
@@ -145,14 +159,29 @@ def user_form(request, pk=None):
         return redirect('accounts:user_list')
 
     user_obj = get_object_or_404(User, pk=pk) if pk else None
+    requested_role = request.GET.get('role')
+    role_values = [choice[0] for choice in User.ROLE_CHOICES]
+    initial = {}
+    if not user_obj and requested_role in role_values:
+        initial['role'] = requested_role
+
     if request.method == 'POST':
         form = UserForm(request.POST, instance=user_obj)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Utilisateur enregistre avec succes.')
-            return redirect('accounts:user_list')
+            if user_obj == request.user and (
+                form.cleaned_data.get('role') != User.ROLE_ADMIN
+                or form.cleaned_data.get('statut_compte') != User.STATUT_ACTIF
+                or form.cleaned_data.get('is_suspended')
+            ):
+                form.add_error(None, 'Vous ne pouvez pas retirer votre propre acces administrateur ni suspendre votre compte.')
+            else:
+                saved_user = form.save()
+                messages.success(request, 'Utilisateur enregistre avec succes.')
+                if saved_user.role == User.ROLE_BIBLIO:
+                    return redirect(f"{reverse('accounts:user_list')}?role={User.ROLE_BIBLIO}")
+                return redirect('accounts:user_list')
     else:
-        form = UserForm(instance=user_obj)
+        form = UserForm(instance=user_obj, initial=initial)
     return render(request, 'accounts/user_form.html', {'form': form, 'user_obj': user_obj})
 
 

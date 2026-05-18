@@ -36,8 +36,10 @@
             {% if loan.can_be_returned %}
               <form method="post" action="{% url 'loans:return' loan.pk %}">
                 {% csrf_token %}
-                <button class="button compact" type="submit" onclick="return confirm('Confirmez-vous le retour de ce livre ?');">Retourner le livre</button>
+                <button class="button compact" type="submit" onclick="return confirm('Confirmez-vous le retour de ce livre ?');">Retour</button>
               </form>
+            {% elif loan.statut == 'retourne' %}
+              <span class="muted">Déjà retourné</span>
             {% endif %}
           </div>
         {% empty %}

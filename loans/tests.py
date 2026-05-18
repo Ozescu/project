@@ -58,7 +58,12 @@ class ReturnWorkflowTests(TestCase):
 
         self.assertRedirects(response, reverse('loans:list'))
         self.assertEqual(self.loan.statut, Emprunt.STAT_RET)
+        self.assertIsNotNone(self.loan.date_retour_effective)
         self.assertEqual(self.exemplar.status, Exemplaire.STATUS_DISP)
+        self.assertContains(response, 'No active loans')
+        self.assertContains(response, 'Borrowing history')
+        self.assertContains(response, 'Already returned')
+        self.assertNotContains(response, '>Return book</button>')
         self.assertTrue(
             Notification.objects.filter(
                 lecteur=self.user,
@@ -67,10 +72,9 @@ class ReturnWorkflowTests(TestCase):
             ).exists()
         )
 
-    def test_return_overdue_loan_clears_overdue_status(self):
+    def test_return_overdue_active_loan_clears_overdue_copy_status(self):
         self.loan.date_retour_prevue = timezone.now() - timezone.timedelta(days=2)
-        self.loan.statut = Emprunt.STAT_RETARD
-        self.loan.save(update_fields=['date_retour_prevue', 'statut'])
+        self.loan.save(update_fields=['date_retour_prevue'])
         self.exemplar.status = Exemplaire.STATUS_RET
         self.exemplar.save(update_fields=['status'])
 
@@ -95,6 +99,31 @@ class ReturnWorkflowTests(TestCase):
                 ouvrage=self.book,
             ).exists()
         )
+
+    def test_cannot_return_loan_when_status_is_not_in_progress(self):
+        self.loan.statut = Emprunt.STAT_RETARD
+        self.loan.save(update_fields=['statut'])
+
+        with self.assertRaises(ValueError) as context:
+            services.process_return(self.loan)
+
+        self.assertIn('deja cloture', str(context.exception))
+
+    def test_reader_list_only_fetches_current_reader_in_progress_loans(self):
+        User = get_user_model()
+        other_reader = User.objects.create_user('other', 'other@example.com', 'pw')
+        other_book = Ouvrage.objects.create(isbn='67890', titre='Other reader book', auteur='Auteur', categorie=self.category)
+        other_copy = Exemplaire.objects.create(ouvrage=other_book, code='EX2')
+        services.create_loan_from_copy(other_copy, other_reader)
+        self.loan.statut = Emprunt.STAT_RETARD
+        self.loan.save(update_fields=['statut'])
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('loans:list'))
+
+        self.assertContains(response, 'No active loans')
+        self.assertNotContains(response, '>Return book</button>')
+        self.assertNotContains(response, other_book.titre)
 
     def test_refresh_overdue_keeps_loan_status_in_progress(self):
         self.loan.date_retour_prevue = timezone.now() - timezone.timedelta(days=2)
@@ -121,7 +150,9 @@ class ReturnWorkflowTests(TestCase):
 
         self.assertRedirects(response, reverse('loans:list'))
         self.assertEqual(self.loan.statut, Emprunt.STAT_RET)
+        self.assertIsNotNone(self.loan.date_retour_effective)
         self.assertEqual(self.exemplar.status, Exemplaire.STATUS_DISP)
+        self.assertContains(response, 'Already returned')
         self.assertTrue(
             Notification.objects.filter(
                 lecteur=self.user,
@@ -164,6 +195,7 @@ class ReturnWorkflowTests(TestCase):
 
         response = self.client.get(reverse('loans:list'))
 
-        self.assertContains(response, 'Historique des emprunts')
-        self.assertContains(response, 'Aucun emprunt actif.')
+        self.assertContains(response, 'Borrowing history')
+        self.assertContains(response, 'No active loans')
+        self.assertContains(response, 'Already returned')
         self.assertNotContains(response, 'Retourner le livre')

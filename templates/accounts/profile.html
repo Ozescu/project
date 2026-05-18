@@ -8,7 +8,10 @@
         <h1>{{ user.get_full_name|default:user.username }}</h1>
         <p>Informations du compte connecté et résumé de l'activité personnelle.</p>
       </div>
-      <a class="button secondary" href="{% url 'recommendations:list' %}">Voir recommandations</a>
+      <div class="actions-row compact">
+        <a class="button" href="{% url 'accounts:profile_edit' %}">Modifier profil</a>
+        <a class="button secondary" href="{% url 'recommendations:list' %}">Voir recommandations</a>
+      </div>
     </div>
   </div>
 

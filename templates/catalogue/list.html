@@ -100,7 +100,11 @@
                   {% csrf_token %}
                   <button class="button secondary" type="submit">{% if o.pk in fav_ids %}Retirer{% else %}Favori{% endif %}</button>
                 </form>
-                {% if o.pk not in reservation_ids %}
+                {% if o.pk in loan_ids %}
+                  <span class="status-pill emprunte">Emprunt en cours</span>
+                {% elif o.pk in request_ids %}
+                  <span class="status-pill pending">Demande en attente</span>
+                {% elif o.pk not in reservation_ids %}
                   <form method="post" action="{% url 'reservations:reserve' o.pk %}">
                     {% csrf_token %}
                     <button class="button" type="submit">Réserver</button>

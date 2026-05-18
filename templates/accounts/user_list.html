@@ -9,7 +9,10 @@
         <p>{% if reader_only_mode %}Consultation des lecteurs, sans accès aux rôles administrateurs ni aux permissions système.{% else %}Ajout, modification, suppression, suspension et gestion des rôles.{% endif %}</p>
       </div>
       {% if can_manage_users %}
-        <a class="button" href="{% url 'accounts:user_add' %}">Ajouter un utilisateur</a>
+        <div class="actions-row">
+          <a class="button" href="{% url 'accounts:user_add' %}?role=bibliothecaire">Ajouter bibliothÃ©caire</a>
+          <a class="button secondary" href="{% url 'accounts:user_add' %}">Ajouter utilisateur</a>
+        </div>
       {% endif %}
     </div>
   </div>
@@ -51,7 +54,7 @@
               <td data-label="Utilisateur">{{ u.username }}</td>
               <td data-label="Email">{{ u.email|default:'-' }}</td>
               <td data-label="Rôle"><span class="badge">{{ u.get_role_display }}</span></td>
-              <td data-label="Statut"><span class="status-pill {{ u.statut_compte }}">{{ u.statut_compte }}</span></td>
+              <td data-label="Statut"><span class="status-pill {{ u.statut_compte }}">{% if u.is_suspended %}Suspendu{% else %}{{ u.statut_compte }}{% endif %}</span></td>
               <td data-label="Actions">
                 <div class="actions-row compact">
                   <a class="button secondary" href="{% url 'accounts:user_detail' u.id %}">Consulter</a>
@@ -59,7 +62,7 @@
                     <a class="button secondary" href="{% url 'accounts:user_edit' u.id %}">Modifier</a>
                     <form method="post" action="{% url 'accounts:user_toggle_status' u.id %}">
                       {% csrf_token %}
-                      <button class="button secondary" type="submit">{% if u.statut_compte == 'actif' %}Suspendre{% else %}Réactiver{% endif %}</button>
+                      <button class="button secondary" type="submit">{% if u.statut_compte == 'actif' and not u.is_suspended %}Suspendre{% else %}Réactiver{% endif %}</button>
                     </form>
                     <a class="button danger" href="{% url 'accounts:user_delete' u.id %}">Supprimer</a>
                   {% endif %}
