@@ -1,0 +1,17 @@
+<article class="card book-card">
+  <a class="cover-link" href="{{ o.get_absolute_url }}">
+    {% if o.couverture %}
+      <img class="book-cover" src="{{ o.couverture.url }}" alt="{{ o.titre }}">
+    {% else %}
+      <div class="book-cover placeholder">B</div>
+    {% endif %}
+  </a>
+  <div>
+    <span class="badge">{{ o.categorie.nom|default:'Sans catégorie' }}</span>
+    <h3><a href="{{ o.get_absolute_url }}">{{ o.titre }}</a></h3>
+    <p class="muted">{{ o.auteur }}</p>
+  </div>
+  <div class="actions-row compact">
+    <a class="button secondary" href="{{ o.get_absolute_url }}">Voir détails</a>
+  </div>
+</article>

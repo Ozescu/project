@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Profil</span>
+        <h1>{{ user.get_full_name|default:user.username }}</h1>
+        <p>Informations du compte connecté et résumé de l'activité personnelle.</p>
+      </div>
+      <a class="button secondary" href="{% url 'recommendations:list' %}">Voir recommandations</a>
+    </div>
+  </div>
+
+  {% if user.is_lecteur %}
+    <div class="dashboard-grid">
+      <div class="card metric-card"><h3>Emprunts actifs</h3><p class="stat">{{ active_loans_count }}</p><p class="stat-label">En cours</p></div>
+      <div class="card metric-card"><h3>Réservations</h3><p class="stat">{{ reservations_count }}</p><p class="stat-label">Historique inclus</p></div>
+      <div class="card metric-card"><h3>Favoris</h3><p class="stat">{{ favorites_count }}</p><p class="stat-label">Livres suivis</p></div>
+      <div class="card metric-card"><h3>Sanctions actives</h3><p class="stat">{{ active_sanctions_count }}</p><p class="stat-label">À régulariser</p></div>
+    </div>
+  {% endif %}
+
+  <div class="card table-card">
+    <h2>Informations du compte</h2>
+    <table class="table responsive-table">
+      <tbody>
+        <tr><th>Utilisateur</th><td>{{ user.username }}</td></tr>
+        <tr><th>Nom</th><td>{{ user.first_name }} {{ user.last_name }}</td></tr>
+        <tr><th>Email</th><td>{{ user.email|default:'-' }}</td></tr>
+        <tr><th>Rôle</th><td>{{ user.get_role_display }}</td></tr>
+        <tr><th>Statut</th><td><span class="status-pill {{ user.statut_compte }}">{{ user.get_statut_compte_display }}</span></td></tr>
+        <tr><th>Téléphone</th><td>{{ user.telephone|default:'-' }}</td></tr>
+        <tr><th>Adresse</th><td>{{ user.adresse|default:'-' }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

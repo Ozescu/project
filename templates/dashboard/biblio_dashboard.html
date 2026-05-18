@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Bibliothécaire</span>
+        <h1>Tableau de bord opérationnel</h1>
+        <p>Gestion quotidienne des ouvrages, exemplaires, emprunts, retours, retards et réservations, sans accès aux permissions système.</p>
+      </div>
+      <div class="actions-row">
+        <a class="button" href="{% url 'loans:create' %}">Créer emprunt</a>
+        <a class="button secondary" href="{% url 'catalogue:ouvrage_add' %}">Ajouter ouvrage</a>
+        <a class="button secondary" href="{% url 'accounts:user_list' %}">Voir lecteurs</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card"><h3>Ouvrages</h3><p class="stat">{{ ouvrages_count }}</p><p class="stat-label">Catalogue géré</p></div>
+    <div class="card metric-card"><h3>Exemplaires</h3><p class="stat">{{ exemplaires_count }}</p><p class="stat-label">{{ available_copies }} disponibles</p></div>
+    <div class="card metric-card"><h3>Emprunts actifs</h3><p class="stat">{{ active_loans }}</p><p class="stat-label">Retours à suivre</p></div>
+    <div class="card metric-card"><h3>Retournés</h3><p class="stat">{{ returned_loans }}</p><p class="stat-label">Historique clos</p></div>
+    <div class="card metric-card"><h3>En retard</h3><p class="stat">{{ overdue_loans }}</p><p class="stat-label">Statut critique</p></div>
+    <div class="card metric-card"><h3>Demandes emprunt</h3><p class="stat">{{ pending_requests_count }}</p><p class="stat-label">En attente validation</p></div>
+    <div class="card metric-card"><h3>Notifications</h3><p class="stat">{{ important_notifications_count }}</p><p class="stat-label">Importantes récentes</p></div>
+    <div class="card metric-card"><h3>Retours aujourd’hui</h3><p class="stat">{{ due_today_count }}</p><p class="stat-label">Action immédiate</p></div>
+  </div>
+
+  {% load filters %}
+
+  <div class="analytics-grid">
+    {% if due_today_loans %}
+    <div class="card">
+      <h3>Retours aujourd'hui</h3>
+      <div class="stack-list">
+        {% for loan in due_today_loans %}
+          <div class="stack-item">
+            <div>
+              <strong>{{ loan.exemplaire.ouvrage.titre }}</strong>
+              <span>{{ loan.lecteur.username }} - statut {{ loan.get_statut_display }}</span>
+            </div>
+            <div class="stack-meta">
+              {% if loan.can_be_returned %}
+                <form method="post" action="{% url 'loans:return' loan.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button class="button mini" type="submit" title="Confirmer le retour de ce livre">Retourner</button>
+                </form>
+              {% else %}
+                <span class="muted">-</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="card">
+      <h3>Derniers emprunts</h3>
+      <div class="stack-list">
+        {% for loan in recent_loans %}
+          <div class="stack-item">
+            <div>
+              <strong>{{ loan.exemplaire.ouvrage.titre }}</strong>
+              <span>{{ loan.lecteur.username }}</span>
+            </div>
+            <div class="stack-meta">
+              <span class="status-pill {{ loan.statut }}">{{ loan.get_statut_display }}</span>
+            </div>
+          </div>
+        {% empty %}<p class="muted">Aucun emprunt récent.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Réservations à traiter</h3>
+      <div class="stack-list">
+        {% for item in recent_reservations %}
+          {% with reservation=item.reservation related_loan=item.related_loan %}
+            <div class="stack-item">
+              <div>
+                <strong>{{ reservation.ouvrage.titre }}</strong>
+                <span>{{ reservation.lecteur.username }} - {{ reservation.get_statut_display }}</span>
+              </div>
+              <div class="stack-meta">
+                <form method="post" action="{% url 'reservations:confirm' reservation.pk %}">
+                  {% csrf_token %}
+                  <button class="button mini" type="submit">Accepter</button>
+                </form>
+                <form method="post" action="{% url 'reservations:cancel' reservation.pk %}">
+                  {% csrf_token %}
+                  <button class="button mini secondary" type="submit">Refuser</button>
+                </form>
+              </div>
+            </div>
+          {% endwith %}
+        {% empty %}<p class="muted">Aucune réservation à traiter.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Notifications importantes</h3>
+      <div class="stack-list">
+        {% for note in recent_notifications %}
+          <div class="stack-item">
+            <div>
+              <strong>{{ note.get_type_notification_display }}</strong>
+              <span>{{ note.lecteur.username }} - {{ note.date_envoi|date:'d/m/Y H:i' }}</span>
+            </div>
+            <p class="muted">{{ note.message|truncatechars:80 }}</p>
+          </div>
+        {% empty %}<p class="muted">Aucune notification récente.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Lecteurs en retard</h3>
+      <div class="stack-list">
+        {% for item in overdue_readers %}
+          <div class="stack-item">
+            <div>
+              <strong>{{ item.loan.exemplaire.ouvrage.titre }}</strong>
+              <span>{{ item.loan.lecteur.username }} - retour {{ item.loan.date_retour_prevue|date:'d/m/Y' }}</span>
+            </div>
+            <div class="stack-meta">
+              <span class="status-pill overdue">+{{ item.loan.overdue_days }}j</span>
+              {% if item.sanction %}
+                <span class="status-pill danger">{{ item.sanction.get_type_sanction_display }} {{ item.sanction.montant }} MAD</span>
+              {% endif %}
+              {% if item.loan.can_be_returned %}
+                <form method="post" action="{% url 'loans:return' item.loan.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button class="button mini" type="submit" title="Confirmer le retour de ce livre">Retourner</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}<p class="muted">Aucun lecteur en retard.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

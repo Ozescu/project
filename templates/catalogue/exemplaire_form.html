@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <h1>{% if exemplaire %}Modifier l'exemplaire{% else %}Nouvel exemplaire{% endif %}</h1>
+    <p>{% if exemplaire %}Mettez à jour les informations de l'exemplaire.{% else %}Ajoutez un exemplaire pour ce livre.{% endif %}</p>
+  </div>
+  <div class="form-card">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="field-block">
+          {{ form.ouvrage.label_tag }}
+          {{ form.ouvrage }}
+          {% for error in form.ouvrage.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="field-block">
+          {{ form.code.label_tag }}
+          {{ form.code }}
+          {% for error in form.code.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="field-block full-width">
+          {{ form.status.label_tag }}
+          {{ form.status }}
+          {% for error in form.status.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+      </div>
+      <div class="form-actions sticky">
+        <a class="button secondary" href="{% if exemplaire %}{% url 'catalogue:detail' exemplaire.ouvrage.pk %}{% else %}{% url 'catalogue:list' %}{% endif %}">Annuler</a>
+        <button class="button" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

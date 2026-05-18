@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Profil utilisateur</span>
+        <h1>{{ user_obj.username }}</h1>
+        <p>Consultation du profil, du rôle et du statut de compte.</p>
+      </div>
+      <div class="actions-row">
+        <a class="button secondary" href="{% url 'accounts:user_list' %}">Retour</a>
+        {% if user.is_administrateur %}
+          <a class="button" href="{% url 'accounts:user_edit' user_obj.pk %}">Modifier</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="dashboard-grid">
+    <div class="card"><h3>Identité</h3><p><strong>Nom</strong><br>{{ user_obj.first_name }} {{ user_obj.last_name }}</p><p><strong>Email</strong><br>{{ user_obj.email|default:'-' }}</p></div>
+    <div class="card"><h3>Accès</h3><p><strong>Rôle</strong><br>{{ user_obj.get_role_display }}</p><p><strong>Statut</strong><br>{{ user_obj.statut_compte }}</p></div>
+    <div class="card"><h3>Contact</h3><p><strong>Téléphone</strong><br>{{ user_obj.telephone|default:'-' }}</p><p><strong>Adresse</strong><br>{{ user_obj.adresse|default:'-' }}</p></div>
+  </div>
+</div>
+{% endblock %}

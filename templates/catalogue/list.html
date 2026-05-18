@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="section catalogue-page">
+  <div class="hero-card page-hero">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Catalogue</span>
+        <h1>Catalogue des ouvrages</h1>
+        <p>Explorez les titres, filtrez par catégorie ou disponibilité, puis accédez aux réservations, favoris et détails.</p>
+      </div>
+      {% if can_manage %}
+        <div class="actions-row">
+          <a class="button" href="{% url 'catalogue:ouvrage_add' %}">Ajouter un ouvrage</a>
+          <a class="button secondary" href="{% url 'catalogue:category_list' %}">Catégories</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card filter-panel">
+    <form method="get" class="filters-grid">
+      <div class="form-group search-field">
+        <label>Recherche</label>
+        <input name="q" placeholder="Titre, auteur, ISBN, sujet" value="{{ request.GET.q }}">
+      </div>
+      <div class="form-group">
+        <label>Catégorie</label>
+        <select name="categorie">
+          <option value="">Toutes catégories</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}" {% if request.GET.categorie == c.id|stringformat:'s' %}selected{% endif %}>{{ c.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Statut</label>
+        <select name="status">
+          <option value="">Tous les statuts</option>
+          {% for value,label in status_choices %}
+            <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Disponibilité</label>
+        <select name="disponible">
+          <option value="">Tous</option>
+          <option value="1" {% if request.GET.disponible == '1' %}selected{% endif %}>Disponible uniquement</option>
+        </select>
+      </div>
+      <button class="button" type="submit">Rechercher</button>
+      <a class="button secondary" href="{% url 'catalogue:list' %}">Réinitialiser</a>
+    </form>
+  </div>
+
+  {% if ouvrages %}
+    <div class="catalogue-toolbar">
+      <div>
+        <span class="eyebrow">Résultats</span>
+        <h2>Ouvrages</h2>
+      </div>
+      {% if is_paginated %}
+        <span class="status-pill">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% endif %}
+    </div>
+
+    <div class="catalogue-grid">
+      {% for o in ouvrages %}
+        <article class="catalogue-card">
+          <a class="catalogue-cover" href="{{ o.get_absolute_url }}">
+            {% if o.couverture %}
+              <img src="{{ o.couverture.url }}" alt="{{ o.titre }}">
+            {% else %}
+              <div class="cover-placeholder">
+                <span>B</span>
+                <small>{{ o.categorie.nom|default:'Catalogue' }}</small>
+              </div>
+            {% endif %}
+          </a>
+
+          <div class="catalogue-card-body">
+            <div class="book-meta-row">
+              <span class="badge">{{ o.categorie.nom|default:'Sans catégorie' }}</span>
+              {% if o.available_count > 0 %}
+                <span class="status-pill available">{{ o.available_count }} dispo.</span>
+              {% else %}
+                <span class="status-pill borrowed">Indisponible</span>
+              {% endif %}
+            </div>
+
+            <h3><a href="{{ o.get_absolute_url }}">{{ o.titre }}</a></h3>
+            <p class="muted">{{ o.auteur }}</p>
+            <p class="small">ISBN {{ o.isbn }}</p>
+
+            <div class="catalogue-actions">
+              <a class="button secondary" href="{{ o.get_absolute_url }}">Détails</a>
+              {% if user.is_authenticated and user.is_lecteur %}
+                <form method="post" action="{% url 'catalogue:favorite_toggle' o.pk %}">
+                  {% csrf_token %}
+                  <button class="button secondary" type="submit">{% if o.pk in fav_ids %}Retirer{% else %}Favori{% endif %}</button>
+                </form>
+                {% if o.pk not in reservation_ids %}
+                  <form method="post" action="{% url 'reservations:reserve' o.pk %}">
+                    {% csrf_token %}
+                    <button class="button" type="submit">Réserver</button>
+                  </form>
+                {% else %}
+                  <span class="status-pill reserved">Réservé</span>
+                {% endif %}
+              {% endif %}
+              {% if can_manage %}
+                <a class="button secondary" href="{% url 'catalogue:ouvrage_edit' o.pk %}">Modifier</a>
+                <a class="button danger" href="{% url 'catalogue:ouvrage_delete' o.pk %}">Supprimer</a>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+      <div class="pagination-row card">
+        <span>Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+        <div class="actions-row compact">
+          {% if page_obj.has_previous %}
+            <a class="button secondary" href="?q={{ request.GET.q }}&categorie={{ request.GET.categorie }}&disponible={{ request.GET.disponible }}&status={{ request.GET.status }}&page={{ page_obj.previous_page_number }}">Précédent</a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a class="button secondary" href="?q={{ request.GET.q }}&categorie={{ request.GET.categorie }}&disponible={{ request.GET.disponible }}&status={{ request.GET.status }}&page={{ page_obj.next_page_number }}">Suivant</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="empty-state">
+      <h3>Aucun résultat</h3>
+      <p>Aucun ouvrage ne correspond à votre recherche.</p>
+      {% if can_manage %}<a class="button" href="{% url 'catalogue:ouvrage_add' %}">Ajouter un ouvrage</a>{% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

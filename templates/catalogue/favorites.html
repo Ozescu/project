@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Favoris</span>
+        <h1>Mes livres favoris</h1>
+        <p>Retrouvez rapidement les ouvrages que vous souhaitez suivre ou emprunter plus tard.</p>
+      </div>
+      <a class="button secondary" href="{% url 'catalogue:list' %}">Explorer le catalogue</a>
+    </div>
+  </div>
+
+  {% if ouvrages %}
+    <div class="book-grid">
+      {% for o in ouvrages %}
+        {% include 'catalogue/partials/book_card.html' with o=o %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h3>Aucun favori</h3>
+      <p>Ajoutez des ouvrages depuis le catalogue pour les retrouver ici.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

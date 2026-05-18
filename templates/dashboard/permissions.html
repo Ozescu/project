@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div>
+      <span class="eyebrow">Permissions système</span>
+      <h1>Matrice des accès</h1>
+      <p>Vue administrateur des capacités par rôle. Cette page est inaccessible aux bibliothécaires et lecteurs.</p>
+    </div>
+  </div>
+  <div class="card table-card">
+    <table class="table responsive-table">
+      <thead><tr><th>Fonction</th><th>Admin</th><th>Bibliothécaire</th><th>Lecteur</th></tr></thead>
+      <tbody>
+        {% for label, admin, biblio, lecteur in permissions %}
+          <tr>
+            <td data-label="Fonction">{{ label }}</td>
+            <td data-label="Admin"><span class="status-pill {% if admin %}available{% else %}maintenance{% endif %}">{% if admin %}Oui{% else %}Non{% endif %}</span></td>
+            <td data-label="Bibliothécaire"><span class="status-pill {% if biblio %}available{% else %}maintenance{% endif %}">{% if biblio %}Oui{% else %}Non{% endif %}</span></td>
+            <td data-label="Lecteur"><span class="status-pill {% if lecteur %}available{% else %}maintenance{% endif %}">{% if lecteur %}Oui{% else %}Non{% endif %}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

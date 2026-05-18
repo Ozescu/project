@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Notifications</span>
+        <h1>{% if user.is_bibliothecaire or user.is_administrateur %}Notifications importantes{% else %}Mes notifications{% endif %}</h1>
+        <p>Alertes liées aux emprunts, retards, réservations, retours et disponibilités.</p>
+      </div>
+      {% if notifications %}
+        <form method="post" action="{% url 'notifications:mark_all_read' %}">
+          {% csrf_token %}
+          <button class="button secondary" type="submit">Tout marquer comme lu</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  {% if notifications %}
+    <div class="card table-card">
+      <table class="table responsive-table">
+        <thead><tr>{% if user.is_bibliothecaire or user.is_administrateur %}<th>Lecteur</th>{% endif %}<th>Ouvrage</th><th>Date</th><th>Type</th><th>Message</th><th>Statut</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for n in notifications %}
+            <tr>
+              {% if user.is_bibliothecaire or user.is_administrateur %}<td data-label="Lecteur">{{ n.lecteur.username }}</td>{% endif %}
+              <td data-label="Ouvrage">{% if n.ouvrage %}<a class="table-link" href="{{ n.ouvrage.get_absolute_url }}">{{ n.ouvrage.titre }}</a>{% else %}-{% endif %}</td>
+              <td data-label="Date">{{ n.date_envoi|date:'d/m/Y H:i' }}</td>
+              <td data-label="Type"><span class="status-pill neutral">{{ n.get_type_notification_display }}</span></td>
+              <td data-label="Message">{{ n.message }}</td>
+              <td data-label="Statut"><span class="status-pill {% if n.lu %}available{% else %}warning{% endif %}">{{ n.lu|yesno:'Lue,Non lue' }}</span></td>
+              <td data-label="Action">
+                {% if not n.lu %}
+                  <form method="post" action="{% url 'notifications:mark_read' n.pk %}">
+                    {% csrf_token %}
+                    <button class="button mini secondary" type="submit">Marquer lue</button>
+                  </form>
+                {% else %}
+                  <span class="muted">-</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state"><h3>Aucune notification</h3><p>Aucune notification pour le moment.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

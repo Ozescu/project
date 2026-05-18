@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="form-card">
+    <h2>Créer un emprunt</h2>
+    <p class="form-subtitle">Attribuez un exemplaire disponible à un lecteur en quelques secondes.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="field-block">
+          <label for="id_lecteur">Lecteur (ID)</label>
+          <input id="id_lecteur" name="lecteur" placeholder="ID du lecteur">
+        </div>
+        <div class="field-block">
+          <label for="id_exemplaire">Exemplaire</label>
+          <select id="id_exemplaire" name="exemplaire">
+            {% for ex in exemplaires %}
+              <option value="{{ ex.id }}">{{ ex }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field-block">
+          <label for="date_debut">Date emprunt</label>
+          <input type="date" id="date_debut" name="date_debut">
+        </div>
+        <div class="field-block">
+          <label for="date_retour">Date retour prevue</label>
+          <input type="date" id="date_retour" name="date_retour">
+        </div>
+      </div>
+      <div class="form-actions sticky">
+        <button class="button" type="submit">Enregistrer l'emprunt</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

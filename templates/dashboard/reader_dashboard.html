@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Espace lecteur</span>
+        <h1>Bonjour {{ user.first_name|default:user.username }}</h1>
+        <p>Suivez vos emprunts, vos réservations, vos favoris, vos pénalités et vos recommandations personnalisées.</p>
+      </div>
+      <div class="actions-row">
+        <a class="button" href="{% url 'catalogue:list' %}">Explorer le catalogue</a>
+        <a class="button secondary" href="{% url 'catalogue:favorites' %}">Mes favoris</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card"><h3>Emprunts</h3><p class="stat">{{ loans_count }}</p><p class="stat-label">{{ active_loans_count }} en cours</p></div>
+    <div class="card metric-card"><h3>Réservations</h3><p class="stat">{{ reservations_count }}</p><p class="stat-label">Historique inclus</p></div>
+    <div class="card metric-card"><h3>Favoris</h3><p class="stat">{{ favorites_count }}</p><p class="stat-label">Accès rapide</p></div>
+    <div class="card metric-card"><h3>Retards</h3><p class="stat">{{ overdue_count }}</p><p class="stat-label">À surveiller</p></div>
+    <div class="card metric-card"><h3>Sanctions</h3><p class="stat">{{ sanctions_count }}</p><p class="stat-label">Amendes personnelles</p></div>
+  </div>
+
+  <div class="analytics-grid">
+    <div class="card">
+      <h3>Emprunts en cours</h3>
+      <div class="stack-list">
+        {% for loan in active_loans %}
+          <div class="loan-row">
+            <div>
+              <a href="{{ loan.exemplaire.ouvrage.get_absolute_url }}"><strong>{{ loan.exemplaire.ouvrage.titre }}</strong></a>
+              <span>{{ loan.date_retour_prevue|date:'d/m/Y' }} - {{ loan.get_statut_display }}</span>
+            </div>
+            {% if loan.can_be_returned %}
+              <form method="post" action="{% url 'loans:return' loan.pk %}">
+                {% csrf_token %}
+                <button class="button compact" type="submit" onclick="return confirm('Confirmez-vous le retour de ce livre ?');">Retourner le livre</button>
+              </form>
+            {% endif %}
+          </div>
+        {% empty %}
+          <p class="muted">Aucun emprunt actif.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Activité récente</h3>
+      <div class="stack-list">
+        {% for loan in recent_loans %}
+          <a href="{{ loan.exemplaire.ouvrage.get_absolute_url }}"><strong>{{ loan.exemplaire.ouvrage.titre }}</strong><span>{{ loan.get_statut_display }} - retour prévu {{ loan.date_retour_prevue|date:'d/m/Y' }}</span></a>
+        {% empty %}<p class="muted">Aucun emprunt pour le moment.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Réservations</h3>
+      <div class="stack-list">
+        {% for r in recent_reservations %}
+          <a href="{{ r.ouvrage.get_absolute_url }}"><strong>{{ r.ouvrage.titre }}</strong><span>{{ r.get_statut_display }} - position {{ r.position_file }}</span></a>
+        {% empty %}<p class="muted">Aucune réservation.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Favoris</h3>
+      <div class="stack-list">
+        {% for f in favorites %}
+          <a href="{{ f.ouvrage.get_absolute_url }}"><strong>{{ f.ouvrage.titre }}</strong><span>{{ f.ouvrage.auteur }}</span></a>
+        {% empty %}<p class="muted">Aucun favori enregistré.</p>{% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h3>Notifications</h3>
+      <div class="stack-list">
+        {% for n in notifications %}
+          <div><strong>{{ n.get_type_notification_display }}</strong><span>{{ n.message|truncatewords:12 }}</span></div>
+        {% empty %}<p class="muted">Aucune notification récente.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Recommandé pour vous</h2>
+    <div class="book-grid">
+      {% for o in recommendations %}
+        {% include 'catalogue/partials/book_card.html' with o=o %}
+      {% empty %}
+        <div class="empty-state"><h3>Aucune suggestion</h3><p>Explorez le catalogue pour améliorer les recommandations.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

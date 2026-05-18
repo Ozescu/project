@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Administration</span>
+        <h1>{{ title }}</h1>
+        <p>{{ description }}</p>
+      </div>
+      <div class="actions-row">
+        <a class="button secondary" href="{% url 'notifications:mine' %}">Voir notifications</a>
+        <a class="button secondary" href="{% url 'dashboard:admin' %}">Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card"><h3>Total notifications</h3><p class="stat">{{ total_count }}</p><p class="stat-label">Historique complet</p></div>
+    <div class="card metric-card"><h3>Non lues</h3><p class="stat">{{ unread_count }}</p><p class="stat-label">À traiter</p></div>
+  </div>
+
+  <div class="card table-card">
+    <h2>Types de notifications</h2>
+    <table class="table responsive-table">
+      <thead><tr><th>Type</th><th>Total</th></tr></thead>
+      <tbody>
+        {% for row in type_stats %}
+          <tr><td data-label="Type">{{ row.type_notification }}</td><td data-label="Total">{{ row.total }}</td></tr>
+        {% empty %}
+          <tr><td colspan="2" class="muted">Aucune notification.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

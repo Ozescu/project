@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <h1>{% if category %}Modifier la catégorie{% else %}Nouvelle catégorie{% endif %}</h1>
+    <p>{% if category %}Mettez à jour les informations de la catégorie.{% else %}Créez une nouvelle catégorie pour organiser les ouvrages.{% endif %}</p>
+  </div>
+  <div class="form-card">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="field-block full-width">
+          {{ form.nom.label_tag }}
+          {{ form.nom }}
+          {% if form.nom.help_text %}<div class="field-help">{{ form.nom.help_text }}</div>{% endif %}
+          {% for error in form.nom.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+      </div>
+      <div class="form-actions sticky">
+        <a class="button secondary" href="{% url 'catalogue:category_list' %}">Annuler</a>
+        <button class="button" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

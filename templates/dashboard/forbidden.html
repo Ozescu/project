@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="empty-state">
+    <h3>Accès refusé</h3>
+    <p>Cette page n'est pas disponible pour votre rôle.</p>
+    <a class="button" href="{% url 'landing' %}">Retour à l'accueil</a>
+  </div>
+</div>
+{% endblock %}

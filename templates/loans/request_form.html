@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="form-card">
+    <h2>Demande de prêt</h2>
+    <p class="form-subtitle">Choisissez vos dates souhaitées pour emprunter cet ouvrage.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="field-block full">
+          <label for="date_debut">Date souhaitee</label>
+          <input type="date" id="date_debut" name="date_debut">
+        </div>
+        <div class="field-block full">
+          <label for="date_fin">Date de retour souhaitée (facultatif)</label>
+          <input type="date" id="date_fin" name="date_fin">
+        </div>
+        <div class="field-block full">
+          <label for="commentaire">Commentaire (facultatif)</label>
+          <textarea id="commentaire" name="commentaire" rows="4" placeholder="Renseignez un besoin particulier..."></textarea>
+        </div>
+      </div>
+      <div class="form-actions sticky">
+        <button class="button" type="submit">Envoyer la demande</button>
+        <a class="button secondary" href="{% url 'catalogue:detail' ouvrage.pk %}">Retour</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

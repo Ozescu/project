@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div>
+      <span class="eyebrow">Sanctions</span>
+      <h1>{% if user.is_bibliothecaire or user.is_administrateur %}Sanctions et amendes{% else %}Mes sanctions{% endif %}</h1>
+      <p>Suivi réel des amendes, suspensions, blocages et pénalités liées aux retards.</p>
+    </div>
+  </div>
+  {% if sanctions %}
+    <div class="card table-card">
+      <table class="table responsive-table">
+        <thead><tr>{% if user.is_bibliothecaire or user.is_administrateur %}<th>Lecteur</th>{% endif %}<th>Type</th><th>Montant</th><th>Début</th><th>Fin</th><th>Statut</th>{% if user.is_bibliothecaire or user.is_administrateur %}<th>Action</th>{% endif %}</tr></thead>
+        <tbody>
+          {% for s in sanctions %}
+            <tr>
+              {% if user.is_bibliothecaire or user.is_administrateur %}<td data-label="Lecteur">{{ s.lecteur.username }}</td>{% endif %}
+              <td data-label="Type">{{ s.get_type_sanction_display }}</td>
+              <td data-label="Montant">{{ s.montant }} MAD</td>
+              <td data-label="Début">{{ s.date_debut|date:'d/m/Y' }}</td>
+              <td data-label="Fin">{{ s.date_fin|date:'d/m/Y'|default:'-' }}</td>
+              <td data-label="Statut"><span class="status-pill {{ s.statut }}">{{ s.statut }}</span></td>
+              {% if user.is_bibliothecaire or user.is_administrateur %}
+                <td data-label="Action">
+                  {% if s.statut == 'active' %}
+                    <div class="actions-row compact">
+                      <form method="post" action="{% url 'sanctions:resolve' s.pk %}">
+                        {% csrf_token %}
+                        <button class="button mini" type="submit">Résoudre</button>
+                      </form>
+                      {% if user.is_administrateur %}
+                        <form method="post" action="{% url 'sanctions:cancel' s.pk %}">
+                          {% csrf_token %}
+                          <button class="button mini danger" type="submit">Annuler</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <span class="muted">Clôturée</span>
+                  {% endif %}
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state"><h3>Aucune sanction</h3><p>Aucune sanction réelle à afficher pour le moment.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

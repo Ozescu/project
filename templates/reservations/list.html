@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Réservations</span>
+        <h1>{% if user.is_bibliothecaire or user.is_administrateur %}Réservations lecteurs{% else %}Mes réservations{% endif %}</h1>
+        <p>Suivi des demandes, file d'attente, statut et historique des réservations.</p>
+      </div>
+      <a class="button secondary" href="{% url 'catalogue:list' %}">Catalogue</a>
+    </div>
+  </div>
+  {% if reservations %}
+    <div class="card table-card">
+      <table class="table responsive-table">
+        <thead><tr><th>Ouvrage</th>{% if user.is_bibliothecaire or user.is_administrateur %}<th>Lecteur</th>{% endif %}<th>Date</th><th>Position</th><th>Statut</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for r in reservations %}
+            <tr>
+              <td data-label="Ouvrage"><a class="table-link" href="{{ r.ouvrage.get_absolute_url }}">{{ r.ouvrage.titre }}</a></td>
+              {% if user.is_bibliothecaire or user.is_administrateur %}<td data-label="Lecteur">{{ r.lecteur.username }}</td>{% endif %}
+              <td data-label="Date">{{ r.date_reservation|date:'d/m/Y H:i' }}</td>
+              <td data-label="Position">{{ r.position_file }}</td>
+              <td data-label="Statut"><span class="status-pill {{ r.statut }}">{{ r.get_statut_display }}</span></td>
+              <td data-label="Action">
+                {% if r.statut == 'active' %}
+                  <div class="actions-row compact">
+                    {% if user.is_bibliothecaire or user.is_administrateur %}
+                      <form method="post" action="{% url 'reservations:confirm' r.pk %}">
+                        {% csrf_token %}
+                        <button class="button mini" type="submit">Accepter</button>
+                      </form>
+                      <form method="post" action="{% url 'reservations:reject' r.pk %}">
+                        {% csrf_token %}
+                        <button class="button mini danger" type="submit">Refuser</button>
+                      </form>
+                    {% elif r.lecteur == user %}
+                      <form method="post" action="{% url 'reservations:cancel' r.pk %}">
+                        {% csrf_token %}
+                        <button class="button mini secondary" type="submit">Annuler</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <span class="muted">Historique</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state"><h3>Aucune réservation</h3><p>Aucune réservation réelle à afficher pour le moment.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

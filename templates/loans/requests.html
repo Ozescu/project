@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">{% if user.is_bibliothecaire or user.is_administrateur %}Demandes de prêt{% else %}Mes demandes{% endif %}</span>
+        <h1>{% if user.is_bibliothecaire or user.is_administrateur %}Gestion des demandes d'emprunt{% else %}Historique de mes demandes{% endif %}</h1>
+        <p>Suivi des demandes de prêt, validation du personnel, et actions en attente.</p>
+      </div>
+      <a class="button secondary" href="{% url 'catalogue:list' %}">Catalogue</a>
+    </div>
+  </div>
+  {% if requests %}
+    <div class="card table-card">
+      <table class="table responsive-table">
+        <thead>
+          <tr>
+            <th>Ouvrage</th>
+            {% if user.is_bibliothecaire or user.is_administrateur %}<th>Lecteur</th>{% endif %}
+            <th>Retour souhaité</th>
+            <th>Statut</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in requests %}
+            <tr>
+              <td data-label="Ouvrage"><a class="table-link" href="{{ req.ouvrage.get_absolute_url }}">{{ req.ouvrage.titre }}</a></td>
+              {% if user.is_bibliothecaire or user.is_administrateur %}<td data-label="Lecteur">{{ req.lecteur.username }}</td>{% endif %}
+              <td data-label="Retour souhaité">{{ req.date_debut_souhaite|date:'d/m/Y'|default:'Aujourd hui' }} - {{ req.date_fin_souhaite|date:'d/m/Y'|default:'Auto' }}</td>
+              <td data-label="Statut"><span class="status-pill {{ req.statut }}">{{ req.get_statut_display }}</span></td>
+              <td data-label="Action">
+                {% if user.is_bibliothecaire or user.is_administrateur %}
+                  {% if req.statut == 'en_attente' %}
+                    <div class="actions-row compact">
+                      <form method="post" action="{% url 'loans:approve_request' req.pk %}">
+                        {% csrf_token %}
+                        <input class="compact-input" type="date" name="date_debut" value="{{ req.date_debut_souhaite|date:'Y-m-d' }}">
+                        <input class="compact-input" type="date" name="date_retour" value="{{ req.date_fin_souhaite|date:'Y-m-d' }}">
+                        <button class="button">Approuver</button>
+                      </form>
+                      <form method="post" action="{% url 'loans:reject_request' req.pk %}">
+                        {% csrf_token %}
+                        <button class="button secondary">Refuser</button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <span class="muted">Historique</span>
+                  {% endif %}
+                {% elif req.lecteur == user and req.statut == 'en_attente' %}
+                  <form method="post" action="{% url 'loans:cancel_request' req.pk %}">
+                    {% csrf_token %}
+                    <button class="button secondary">Annuler</button>
+                  </form>
+                {% else %}
+                  <span class="muted">Historique</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state"><h3>Aucune demande</h3><p>Vous n'avez aucune demande de prêt à afficher.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

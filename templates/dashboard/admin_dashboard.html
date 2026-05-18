@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section admin-dashboard admin-ops-dashboard">
+  <header class="admin-ops-header">
+    <div>
+      <span class="eyebrow">Supervision</span>
+      <h1>Tableau de bord administrateur</h1>
+      <p>Vue rapide des prêts, réservations, retards et alertes critiques.</p>
+    </div>
+    <div class="admin-ops-actions">
+      <a class="button" href="{% url 'catalogue:ouvrage_add' %}">Ajouter ouvrage</a>
+      <a class="button secondary" href="{% url 'accounts:user_add' %}">Ajouter utilisateur</a>
+    </div>
+  </header>
+
+  <div class="ops-kpi-grid">
+    <a class="ops-kpi" href="{% url 'catalogue:list' %}">
+      <span>Ouvrages</span>
+      <strong>{{ ouvrages_count }}</strong>
+      <small>Catalogue</small>
+    </a>
+    <a class="ops-kpi" href="{% url 'catalogue:list' %}">
+      <span>Exemplaires</span>
+      <strong>{{ exemplaires_count }}</strong>
+      <small>{{ available_copies_count }} disponibles</small>
+    </a>
+    <a class="ops-kpi" href="{% url 'loans:list' %}">
+      <span>Emprunts actifs</span>
+      <strong>{{ active_loans }}</strong>
+      <small>En cours</small>
+    </a>
+    <a class="ops-kpi" href="{% url 'reservations:my_reservations' %}">
+      <span>Réservations actives</span>
+      <strong>{{ reservations }}</strong>
+      <small>Actives</small>
+    </a>
+    <a class="ops-kpi {% if late_loans_count %}is-danger{% endif %}" href="{% url 'loans:list' %}">
+      <span>Emprunts en retard</span>
+      <strong>{{ late_loans_count }}</strong>
+      <small>{{ overdue_readers_count }} lecteur(s)</small>
+    </a>
+    <a class="ops-kpi {% if important_notifications_count %}is-warning{% endif %}" href="{% url 'notifications:mine' %}">
+      <span>Notifications importantes</span>
+      <strong>{{ important_notifications_count }}</strong>
+      <small>Non lues</small>
+    </a>
+  </div>
+
+  <div class="ops-main-grid">
+    <section class="card ops-panel ops-activity">
+      <div class="ops-panel-head">
+        <div>
+          <span class="eyebrow">Plateforme</span>
+          <h2>Activité récente</h2>
+        </div>
+        <a class="button mini secondary" href="{% url 'notifications:mine' %}">Voir tout</a>
+      </div>
+
+      <div class="ops-activity-list">
+        {% for event in recent_system_activity %}
+          <div class="ops-activity-row">
+            <span class="ops-type">{{ event.type }}</span>
+            <strong>{{ event.label }}</strong>
+            <small>{{ event.detail }}</small>
+          </div>
+        {% empty %}
+          <p class="muted compact-empty">Aucune activité récente.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <aside class="ops-side">
+      <section class="card ops-panel">
+        <div class="ops-panel-head">
+          <div>
+            <span class="eyebrow">Priorité</span>
+            <h2>Alertes opérationnelles</h2>
+          </div>
+          <a class="button mini secondary" href="{% url 'dashboard:system_reports' %}">Rapport</a>
+        </div>
+
+        <div class="ops-alert-list">
+          {% if late_loans_count %}
+            <a class="ops-alert danger" href="{% url 'loans:list' %}">
+              <span>Emprunts en retard</span>
+              <strong>{{ late_loans_count }}</strong>
+            </a>
+          {% endif %}
+          {% if pending_requests_count %}
+            <a class="ops-alert warning" href="{% url 'loans:requests' %}">
+              <span>Demandes emprunt</span>
+              <strong>{{ pending_requests_count }}</strong>
+            </a>
+          {% endif %}
+          {% if returns_to_confirm_count %}
+            <a class="ops-alert danger" href="{% url 'loans:list' %}">
+              <span>Retours à confirmer</span>
+              <strong>{{ returns_to_confirm_count }}</strong>
+            </a>
+          {% endif %}
+          {% if not late_loans_count and not pending_requests_count and not returns_to_confirm_count %}
+            <p class="compact-empty success">Aucune alerte critique.</p>
+          {% endif %}
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

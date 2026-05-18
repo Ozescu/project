@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="public-home">
+  <section class="public-hero">
+    <div class="public-hero-copy">
+      <span class="public-kicker">Plateforme bibliotheque moderne</span>
+      <h1>Une experience simple pour lire, reserver et gerer les emprunts.</h1>
+      <p>
+        Une suite professionnelle pour connecter lecteurs, bibliothecaires et catalogue dans une interface claire, rapide et elegante.
+      </p>
+      <div class="public-hero-actions">
+        <a class="button" href="{% url 'accounts:register' %}">Creer un compte</a>
+        <a class="button secondary" href="{% url 'accounts:login' %}">Se connecter</a>
+      </div>
+    </div>
+
+    <div class="public-mockup" aria-label="Apercu de la plateforme">
+      <div class="mockup-top">
+        <span></span><span></span><span></span>
+        <strong>Catalogue</strong>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-book">
+          <div class="mockup-cover"></div>
+          <div>
+            <strong>Clean Architecture</strong>
+            <span>Disponible aujourd'hui</span>
+          </div>
+        </div>
+        <div class="mockup-book">
+          <div class="mockup-cover alt"></div>
+          <div>
+            <strong>Design Systems</strong>
+            <span>Reservation possible</span>
+          </div>
+        </div>
+        <div class="mockup-action">
+          <span>Retour prevu</span>
+          <strong>Dans 4 jours</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="public-intro">
+    <div>
+      <span class="eyebrow">Bibliotheque connectee</span>
+      <h2>Tout l'essentiel, sans complexite.</h2>
+    </div>
+    <p>
+      Les lecteurs trouvent rapidement un ouvrage, demandent un emprunt et suivent leurs notifications. L'equipe garde la main sur les validations, les retours et la disponibilite.
+    </p>
+  </section>
+
+  <section class="public-features">
+    <article>
+      <span>01</span>
+      <h3>Catalogue clair</h3>
+      <p>Recherche, disponibilite, couvertures, favoris et livres similaires.</p>
+    </article>
+    <article>
+      <span>02</span>
+      <h3>Demandes fluides</h3>
+      <p>Reservation, date souhaitee, validation et notifications automatiques.</p>
+    </article>
+    <article>
+      <span>03</span>
+      <h3>Suivi lecteur</h3>
+      <p>Emprunts actifs, historique, rappels de retour et sanctions visibles.</p>
+    </article>
+    <article>
+      <span>04</span>
+      <h3>Gestion equipe</h3>
+      <p>Retours, retards, exemplaires et disponibilite gardes synchronises.</p>
+    </article>
+  </section>
+
+  <section class="public-stats">
+    <div><strong>3</strong><span>espaces par role</span></div>
+    <div><strong>24/7</strong><span>catalogue consultable</span></div>
+    <div><strong>1</strong><span>workflow unifie</span></div>
+  </section>
+
+  <footer class="public-footer">
+    <span>Bibliotheque Suite SaaS</span>
+    <div>
+      <a href="{% url 'catalogue:list' %}">Catalogue</a>
+      <a href="{% url 'accounts:login' %}">Connexion</a>
+      <a href="{% url 'accounts:register' %}">Inscription</a>
+    </div>
+  </footer>
+</div>
+{% endblock %}

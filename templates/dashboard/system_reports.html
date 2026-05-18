@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Administration</span>
+        <h1>{{ title }}</h1>
+        <p>{{ description }}</p>
+      </div>
+      <div class="actions-row">
+        <a class="button secondary" href="{% url 'dashboard:admin' %}">Dashboard</a>
+        <a class="button secondary" href="{% url 'dashboard:permissions' %}">Permissions</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="card metric-card"><h3>Utilisateurs</h3><p class="stat">{{ total_users }}</p><p class="stat-label">Comptes</p></div>
+    <div class="card metric-card"><h3>Ouvrages</h3><p class="stat">{{ total_books }}</p><p class="stat-label">Titres</p></div>
+    <div class="card metric-card"><h3>Exemplaires</h3><p class="stat">{{ total_copies }}</p><p class="stat-label">Copies</p></div>
+    <div class="card metric-card"><h3>Emprunts actifs</h3><p class="stat">{{ active_loans }}</p><p class="stat-label">En cours</p></div>
+    <div class="card metric-card"><h3>Retours</h3><p class="stat">{{ returned_loans }}</p><p class="stat-label">Historique</p></div>
+    <div class="card metric-card"><h3>Réservations</h3><p class="stat">{{ active_reservations }}</p><p class="stat-label">Actives</p></div>
+    <div class="card metric-card"><h3>Demandes</h3><p class="stat">{{ pending_requests }}</p><p class="stat-label">En attente</p></div>
+    <div class="card metric-card"><h3>Alertes</h3><p class="stat">{{ unread_notifications }}</p><p class="stat-label">Notifications non lues</p></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="section">
+  <div class="detail-hero hero-card">
+    <div class="detail-cover">
+      {% if ouvrage.couverture %}
+        <img class="book-cover large" src="{{ ouvrage.couverture.url }}" alt="{{ ouvrage.titre }}">
+      {% else %}
+        <div class="book-cover large placeholder">B</div>
+      {% endif %}
+    </div>
+    <div>
+      <span class="eyebrow">Détail ouvrage</span>
+      <h1>{{ ouvrage.titre }}</h1>
+      <p>{{ ouvrage.resume|default:'Résumé non disponible.' }}</p>
+      <div class="actions-row">
+        <span class="badge">{{ ouvrage.categorie.nom|default:'Sans catégorie' }}</span>
+        {% if disponibles > 0 %}<span class="status-pill available">Disponible</span>{% else %}<span class="status-pill borrowed">Indisponible</span>{% endif %}
+      </div>
+      <div class="actions-row">
+        {% if user.is_authenticated and user.is_lecteur %}
+          <form method="post" action="{% url 'catalogue:favorite_toggle' ouvrage.pk %}">
+            {% csrf_token %}
+            <button class="button secondary" type="submit">{% if is_fav %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}</button>
+          </form>
+          {% if not has_active_reservation %}
+            <form method="post" action="{% url 'reservations:reserve' ouvrage.pk %}">
+              {% csrf_token %}
+              <button class="button" type="submit">Réserver</button>
+            </form>
+          {% else %}
+            <span class="status-pill reserved">Réservation active</span>
+          {% endif %}
+          {% if not has_active_request and not has_active_loan and not has_active_reservation %}
+            <a class="button" href="{% url 'loans:request' ouvrage.pk %}">Demander un prêt</a>
+          {% elif has_active_request %}
+            <span class="status-pill pending">Demande en attente</span>
+          {% elif has_active_loan %}
+            <span class="status-pill emprunte">Emprunt en cours</span>
+          {% endif %}
+        {% elif not user.is_authenticated %}
+          <a class="button" href="{% url 'accounts:login' %}">Se connecter pour réserver</a>
+        {% endif %}
+        {% if can_manage %}
+          <a class="button secondary" href="{% url 'catalogue:ouvrage_edit' ouvrage.id %}">Modifier</a>
+          <a class="button secondary" href="{% url 'catalogue:exemplaire_add' ouvrage.id %}">Ajouter exemplaire</a>
+          <a class="button danger" href="{% url 'catalogue:ouvrage_delete' ouvrage.id %}">Supprimer</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid details-grid">
+    <div class="card">
+      <h3>Détails bibliographiques</h3>
+      <div class="info-list">
+        <p><strong>Auteur :</strong> {{ ouvrage.auteur }}</p>
+        <p><strong>ISBN :</strong> {{ ouvrage.isbn }}</p>
+        <p><strong>Sujet :</strong> {{ ouvrage.sujet|default:'-' }}</p>
+        <p><strong>Éditeur :</strong> {{ ouvrage.editeur|default:'-' }}</p>
+        <p><strong>Année :</strong> {{ ouvrage.annee_publication|default:'-' }}</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Disponibilité</h3>
+      <div class="stats-mini">
+        <div><span>Copies totales</span><strong>{{ total }}</strong></div>
+        <div><span>Disponibles</span><strong>{{ disponibles }}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="section-header padded">
+      <div><h3>Exemplaires</h3><p class="muted">Disponibilité en temps réel et statuts opérationnels.</p></div>
+    </div>
+    {% if exemplaires %}
+      <table class="table">
+        <thead><tr><th>Code</th><th>Statut</th>{% if can_manage %}<th>Actions</th>{% endif %}</tr></thead>
+        <tbody>
+          {% for e in exemplaires %}
+            <tr>
+              <td>{{ e.code|default:'N/A' }}</td>
+              <td><span class="status-pill {{ e.status }}">{{ e.get_status_display }}</span></td>
+              {% if can_manage %}
+                <td>
+                  <div class="actions-row compact">
+                    <a class="button secondary" href="{% url 'catalogue:exemplaire_edit' e.id %}">Modifier</a>
+                    <a class="button danger" href="{% url 'catalogue:exemplaire_delete' e.id %}">Supprimer</a>
+                  </div>
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">
+        <h3>Pas d'exemplaires</h3>
+        <p>Cet ouvrage n'a pas encore d'exemplaire enregistré.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Livres similaires</h2>
+    <div class="book-grid">
+      {% for o in similar_books %}
+        {% include 'catalogue/partials/book_card.html' with o=o %}
+      {% empty %}<div class="empty-state"><h3>Aucune suggestion similaire</h3><p>Ajoutez plus d'ouvrages dans cette catégorie.</p></div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Recommandé pour vous</h2>
+    <div class="book-grid">
+      {% for o in recommended_books %}
+        {% include 'catalogue/partials/book_card.html' with o=o %}
+      {% empty %}<div class="empty-state"><h3>Aucune recommandation</h3><p>Vos favoris et emprunts enrichiront cette section.</p></div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

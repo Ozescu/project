@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <h1>{% if ouvrage %}Modifier l'ouvrage{% else %}Nouvel ouvrage{% endif %}</h1>
+    <p>{% if ouvrage %}Mettez à jour les détails de l'ouvrage avec une structure claire et complète.{% else %}Ajoutez un ouvrage pour enrichir le catalogue avec des informations claires et accessibles.{% endif %}</p>
+  </div>
+  <div class="form-card">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      <div class="form-section">
+        <h3>Identification</h3>
+        <div class="form-grid">
+          <div class="field-block">
+            {{ form.isbn.label_tag }}
+            {{ form.isbn }}
+            {% if form.isbn.help_text %}<div class="field-help">{{ form.isbn.help_text }}</div>{% endif %}
+            {% for error in form.isbn.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="field-block">
+            {{ form.titre.label_tag }}
+            {{ form.titre }}
+            {% for error in form.titre.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="field-block full-width">
+            {{ form.auteur.label_tag }}
+            {{ form.auteur }}
+            {% for error in form.auteur.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Classification</h3>
+        <div class="form-grid">
+          <div class="field-block">
+            {{ form.sujet.label_tag }}
+            {{ form.sujet }}
+            {% for error in form.sujet.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="field-block">
+            {{ form.categorie.label_tag }}
+            {{ form.categorie }}
+            {% for error in form.categorie.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="field-block">
+            {{ form.editeur.label_tag }}
+            {{ form.editeur }}
+            {% for error in form.editeur.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="field-block">
+            {{ form.annee_publication.label_tag }}
+            {{ form.annee_publication }}
+            {% if form.annee_publication.help_text %}<div class="field-help">{{ form.annee_publication.help_text }}</div>{% endif %}
+            {% for error in form.annee_publication.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Description</h3>
+        <div class="form-grid">
+          <div class="field-block full-width">
+            {{ form.resume.label_tag }}
+            {{ form.resume }}
+            {% if form.resume.help_text %}<div class="field-help">{{ form.resume.help_text }}</div>{% endif %}
+            {% for error in form.resume.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="field-block full-width">
+            {{ form.couverture.label_tag }}
+            {{ form.couverture }}
+            {% if form.couverture.help_text %}<div class="field-help">{{ form.couverture.help_text }}</div>{% endif %}
+            {% for error in form.couverture.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions sticky">
+        <a class="button secondary" href="{% url 'catalogue:list' %}">Annuler</a>
+        <button class="button" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

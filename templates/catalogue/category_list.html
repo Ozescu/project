@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;">
+      <div>
+        <h1>Catégories</h1>
+        <p>Gérez les catégories de votre catalogue.</p>
+      </div>
+      <a class="button" href="{% url 'catalogue:category_add' %}">Nouvelle catégorie</a>
+    </div>
+  </div>
+  <div class="card">
+    {% if categories %}
+      <table class="table">
+        <thead><tr><th>Catégorie</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for category in categories %}
+            <tr>
+              <td>{{ category.nom }}</td>
+              <td style="display:flex;gap:8px;flex-wrap:wrap;"><a class="button secondary" href="{% url 'catalogue:category_edit' category.id %}">Modifier</a><a class="button secondary" href="{% url 'catalogue:category_delete' category.id %}">Supprimer</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state"><h3>Aucune catégorie</h3><p>Créez votre première catégorie pour organiser les ouvrages.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

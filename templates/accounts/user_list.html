@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">{% if reader_only_mode %}Lecteurs{% else %}Gestion utilisateurs{% endif %}</span>
+        <h1>{% if reader_only_mode %}Profils lecteurs{% else %}Gestion des utilisateurs{% endif %}</h1>
+        <p>{% if reader_only_mode %}Consultation des lecteurs, sans accès aux rôles administrateurs ni aux permissions système.{% else %}Ajout, modification, suppression, suspension et gestion des rôles.{% endif %}</p>
+      </div>
+      {% if can_manage_users %}
+        <a class="button" href="{% url 'accounts:user_add' %}">Ajouter un utilisateur</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <form method="get" class="filters-grid">
+      <div class="form-group"><label>Recherche</label><input name="q" placeholder="Nom, email" value="{{ request.GET.q }}"></div>
+      {% if can_manage_users %}
+        <div class="form-group">
+          <label>Rôle</label>
+          <select name="role">
+            <option value="">Tous</option>
+            <option value="lecteur" {% if request.GET.role == 'lecteur' %}selected{% endif %}>Lecteur</option>
+            <option value="bibliothecaire" {% if request.GET.role == 'bibliothecaire' %}selected{% endif %}>Bibliothécaire</option>
+            <option value="administrateur" {% if request.GET.role == 'administrateur' %}selected{% endif %}>Administrateur</option>
+          </select>
+        </div>
+      {% endif %}
+      <div class="form-group">
+        <label>Statut</label>
+        <select name="statut">
+          <option value="">Tous</option>
+          <option value="actif" {% if request.GET.statut == 'actif' %}selected{% endif %}>Actif</option>
+          <option value="suspendu" {% if request.GET.statut == 'suspendu' %}selected{% endif %}>Suspendu</option>
+          <option value="bloque" {% if request.GET.statut == 'bloque' %}selected{% endif %}>Bloqué</option>
+        </select>
+      </div>
+      <button class="button">Filtrer</button>
+    </form>
+  </div>
+
+  <div class="card table-card">
+    {% if users %}
+      <table class="table responsive-table">
+        <thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td data-label="Utilisateur">{{ u.username }}</td>
+              <td data-label="Email">{{ u.email|default:'-' }}</td>
+              <td data-label="Rôle"><span class="badge">{{ u.get_role_display }}</span></td>
+              <td data-label="Statut"><span class="status-pill {{ u.statut_compte }}">{{ u.statut_compte }}</span></td>
+              <td data-label="Actions">
+                <div class="actions-row compact">
+                  <a class="button secondary" href="{% url 'accounts:user_detail' u.id %}">Consulter</a>
+                  {% if can_manage_users %}
+                    <a class="button secondary" href="{% url 'accounts:user_edit' u.id %}">Modifier</a>
+                    <form method="post" action="{% url 'accounts:user_toggle_status' u.id %}">
+                      {% csrf_token %}
+                      <button class="button secondary" type="submit">{% if u.statut_compte == 'actif' %}Suspendre{% else %}Réactiver{% endif %}</button>
+                    </form>
+                    <a class="button danger" href="{% url 'accounts:user_delete' u.id %}">Supprimer</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state"><h3>Aucun utilisateur trouvé</h3><p>Aucun compte ne correspond aux critères.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

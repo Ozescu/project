@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="section">
+  <div class="hero-card">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Recommandations</span>
+        <h1>Suggestions de lecture</h1>
+        <p>Suggestions basées sur vos favoris, vos emprunts précédents et les livres disponibles les plus consultés.</p>
+      </div>
+      <a class="button secondary" href="{% url 'catalogue:list' %}">Retour au catalogue</a>
+    </div>
+  </div>
+
+  {% if ouvrages %}
+    <div class="book-grid">
+      {% for o in ouvrages %}
+        {% include 'catalogue/partials/book_card.html' with o=o %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h3>Aucune recommandation</h3>
+      <p>Ajoutez des favoris ou empruntez des ouvrages pour améliorer les suggestions.</p>
+      <a class="button" href="{% url 'catalogue:list' %}">Explorer le catalogue</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
