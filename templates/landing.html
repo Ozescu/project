@@ -4,40 +4,56 @@
 <div class="public-home">
   <section class="public-hero">
     <div class="public-hero-copy">
-      <span class="public-kicker">Plateforme bibliotheque moderne</span>
-      <h1>Une experience simple pour lire, reserver et gerer les emprunts.</h1>
+      <span class="public-kicker">Plateforme biblioth&egrave;que premium</span>
+      <h1>Une biblioth&egrave;que connect&eacute;e, rapide et &eacute;l&eacute;gante.</h1>
       <p>
-        Une suite professionnelle pour connecter lecteurs, bibliothecaires et catalogue dans une interface claire, rapide et elegante.
+        Explorez le catalogue, r&eacute;servez vos ouvrages, suivez vos emprunts et profitez de recommandations personnalis&eacute;es dans une exp&eacute;rience SaaS moderne.
       </p>
       <div class="public-hero-actions">
-        <a class="button" href="{% url 'accounts:register' %}">Creer un compte</a>
-        <a class="button secondary" href="{% url 'accounts:login' %}">Se connecter</a>
+        <a class="button" href="{% url 'accounts:login' %}">Se connecter</a>
+        <a class="button secondary" href="{% url 'catalogue:list' %}">Explorer le catalogue</a>
+      </div>
+      <div class="public-hero-pills">
+        <span><strong>3 r&ocirc;les</strong>Admin, biblioth&eacute;caire, lecteur</span>
+        <span><strong>Temps r&eacute;el</strong>Emprunts, retours, r&eacute;servations</span>
+        <span><strong>IA</strong>Suggestions personnalis&eacute;es</span>
       </div>
     </div>
 
     <div class="public-mockup" aria-label="Apercu de la plateforme">
       <div class="mockup-top">
         <span></span><span></span><span></span>
-        <strong>Catalogue</strong>
+        <strong>Library OS</strong>
       </div>
       <div class="mockup-body">
+        <div class="mockup-metrics">
+          <div><span>Ouvrages</span><strong>2.4k</strong></div>
+          <div><span>Actifs</span><strong>318</strong></div>
+          <div><span>R&eacute;serv.</span><strong>74</strong></div>
+        </div>
+        <div class="mockup-chart">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
         <div class="mockup-book">
           <div class="mockup-cover"></div>
           <div>
-            <strong>Clean Architecture</strong>
-            <span>Disponible aujourd'hui</span>
+            <strong>Design Systems</strong>
+            <span>Disponible</span>
           </div>
         </div>
         <div class="mockup-book">
           <div class="mockup-cover alt"></div>
           <div>
-            <strong>Design Systems</strong>
-            <span>Reservation possible</span>
+            <strong>Clean Code</strong>
+            <span>R&eacute;serv&eacute;</span>
           </div>
         </div>
-        <div class="mockup-action">
-          <span>Retour prevu</span>
-          <strong>Dans 4 jours</strong>
+        <div class="mockup-book">
+          <div class="mockup-cover"></div>
+          <div>
+            <strong>Data & IA</strong>
+            <span>Recommand&eacute;</span>
+          </div>
         </div>
       </div>
     </div>
