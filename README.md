@@ -12,19 +12,14 @@ source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-2. Migrate and seed demo data:
+2. Start the development server:
 
 ```bash
-python manage.py makemigrations
 python manage.py migrate
-python manage.py seed_demo
-```
-
-3. Run server:
-
-```bash
 python manage.py runserver
 ```
+
+`runserver` applies missing migrations and seeds demo data automatically on a fresh checkout.
 
 Demo accounts:
 - admin / admin12345
